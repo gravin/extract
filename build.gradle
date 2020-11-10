@@ -1,0 +1,34 @@
+plugins {
+    id 'org.springframework.boot' version '2.0.0.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+    maven{ url 'http://maven.aliyun.com/nexus/content/groups/public'}
+    mavenCentral()
+}
+
+dependencies {
+    compile fileTree(dir:'libs',include:['*.jar'])
+//    compile 'org.springframework.boot:spring-boot-starter-web'
+//    compile 'org.springframework.boot:spring-boot-starter-jdbc'
+//    compile group: 'com.oracle.database.jdbc', name: 'ojdbc8', version: '12.2.0.1'
+//    compile group: 'cn.afterturn', name: 'easypoi-base', version: '3.2.0'
+//    compile group: 'cn.afterturn', name: 'easypoi-web', version: '3.2.0'
+//    compile group: 'cn.afterturn', name: 'easypoi-annotation', version: '3.2.0'
+//    compile('org.springframework.boot:spring-boot-starter-test')
+}
+
+task copyJars(type:Copy) {
+    from configurations.runtime
+    into 'libs' // 目标位置
+}
+
+test {
+    useJUnitPlatform()
+}
