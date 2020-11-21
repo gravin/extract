@@ -1,11 +1,15 @@
 package com.example.extract.dto;
 
+import cn.afterturn.easypoi.excel.annotation.Excel;
+
 /**
  * @author Gavin
  * @date 2020/11/19 21:46
  */
 public class SQLCommand {
+    @Excel(name="NAME")
     private String name;
+    @Excel(name="SQL_COMMAND")
     private String sQLCommand;
 
     public String getName() {
