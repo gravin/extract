@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -118,7 +119,11 @@ public class ExcelController {
             e.printStackTrace();
         }
         final JSONObject typeCodeObjectFinal = typeCodeObject;
-        Map<String, Object> codeMap = jdbcTemplate.queryForMap("select type_code||'|::|'||value_code1, value_name from sys_codeprop_value");
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select type_code||'|::|'||value_code1 as code, value_name as name from sys_codeprop_value");
+        Map<String, String> codeMap = new HashMap<>();
+        for (Map<String, Object> map : maps) {
+            codeMap.put((String) map.get("code"),(String) map.get("name"));
+        }
 
         sqlCommands.stream().filter(sqlCommand -> StringUtils.isNotBlank(sqlCommand.getName())).forEach(sqlCommand -> {
                     String tableComment = "";
@@ -150,13 +155,13 @@ public class ExcelController {
                                     row = sheet.createRow(rowNum);
                                     for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
                                         Cell cell = row.createCell(i - 1);
-                                        String tableColumnKey = sqlCommand.getName().toUpperCase()+"|::|"+resultSet.getMetaData().getColumnName(i).toUpperCase();
+                                        String tableColumnKey = sqlCommand.getName().toUpperCase() + "|::|" + resultSet.getMetaData().getColumnName(i).toUpperCase();
                                         String value = String.valueOf(resultSet.getObject(i));
-                                        if(typeCodeObjectFinal.containsKey(tableColumnKey) && StringUtils.isNotBlank(value)){
+                                        if (typeCodeObjectFinal.containsKey(tableColumnKey) && StringUtils.isNotBlank(value)) {
                                             String typeCode = (String) typeCodeObjectFinal.get(tableColumnKey);
                                             String valueName = (String) codeMap.get(typeCode + "|::|" + value);
-                                            cell.setCellValue(valueName+"["+value+"]");
-                                        }else {
+                                            cell.setCellValue(valueName + "[" + value + "]");
+                                        } else {
                                             cell.setCellValue(value);
                                         }
                                     }
