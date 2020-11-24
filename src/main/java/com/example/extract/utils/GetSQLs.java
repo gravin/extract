@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 public class GetSQLs {
     public static void main(String[] args) throws IOException {
-        File file = new File("D:\\ref_src\\plan_question");
+        File file = new File("D:\\ref_src\\新建文件夹");
         Map<String, String> typeCodeMap = new HashMap<>();
         try {
             extractCodeMapFromSQL(file, typeCodeMap);
@@ -33,14 +33,14 @@ public class GetSQLs {
         } else if (file.getName().endsWith(".xml")) {
             String text = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             // 创建 Pattern 对象
-            Pattern r = Pattern.compile("PKG_CSPG_COMMON\\.FUNC_GETVALUEBYCODE\\(T1\\.(\\w+),'(\\w+)'\\)[\\s\\S]*?([ \r\n](\\w+) T1)");
+            Pattern r = Pattern.compile("PKG_CSPG_COMMON\\.FUNC_GETVALUEBYCODE\\(T1\\.(\\w+)\\s*,\\s*'(\\w+)'\\)(?=([\\s\\S]*?([ \r\n](\\w+) T1)))");
 
             // 现在创建 matcher 对象
             Matcher m = r.matcher(text);
-            if (m.find()) {
+            while (m.find()) {
                 System.out.println(m.group(0));
-                System.out.println(m.group(1) + ":" + m.group(2) + ":" + m.group(4));
-                typeCodeMap.put(m.group(4).toUpperCase() + "|::|" + m.group(1).toUpperCase(), m.group(2));
+                System.out.println(m.group(1) + ":" + m.group(2) + ":" + m.group(5));
+                typeCodeMap.put(m.group(5).toUpperCase() + "|::|" + m.group(1).toUpperCase(), m.group(2));
             }
         }
     }
