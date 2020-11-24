@@ -2,14 +2,15 @@ package com.example.extract.controller;
 
 import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.example.extract.dto.SQLCommand;
 import com.example.extract.utils.DbInfoUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.common.usermodel.HyperlinkType;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,17 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -110,6 +110,16 @@ public class ExcelController {
     private void exportAsSqlCommandList(HttpServletResponse response, List<SQLCommand> sqlCommands, String filename) {
         Workbook workbook = new XSSFWorkbook();
         Sheet navSheet = workbook.createSheet("CATEGORY");
+        File file = new File("C:/src/typeCodeMap.txt");
+        JSONObject typeCodeObject = new JSONObject();
+        try {
+            typeCodeObject = JSON.parseObject(FileUtils.readFileToString(file, "utf-8"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final JSONObject typeCodeObjectFinal = typeCodeObject;
+        Map<String, Object> codeMap = jdbcTemplate.queryForMap("select type_code||'|::|'||value_code1, value_name from sys_codeprop_value");
+
         sqlCommands.stream().filter(sqlCommand -> StringUtils.isNotBlank(sqlCommand.getName())).forEach(sqlCommand -> {
                     String tableComment = "";
                     try {
@@ -140,7 +150,15 @@ public class ExcelController {
                                     row = sheet.createRow(rowNum);
                                     for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
                                         Cell cell = row.createCell(i - 1);
-                                        cell.setCellValue(String.valueOf(resultSet.getObject(i)));
+                                        String tableColumnKey = sqlCommand.getName().toUpperCase()+"|::|"+resultSet.getMetaData().getColumnName(i).toUpperCase();
+                                        String value = String.valueOf(resultSet.getObject(i));
+                                        if(typeCodeObjectFinal.containsKey(tableColumnKey) && StringUtils.isNotBlank(value)){
+                                            String typeCode = (String) typeCodeObjectFinal.get(tableColumnKey);
+                                            String valueName = (String) codeMap.get(typeCode + "|::|" + value);
+                                            cell.setCellValue(valueName+"["+value+"]");
+                                        }else {
+                                            cell.setCellValue(value);
+                                        }
                                     }
                                     rowNum++;
                                 }
