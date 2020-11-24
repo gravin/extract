@@ -111,7 +111,13 @@ public class ExcelController {
         Workbook workbook = new XSSFWorkbook();
         Sheet navSheet = workbook.createSheet("CATEGORY");
         sqlCommands.stream().filter(sqlCommand -> StringUtils.isNotBlank(sqlCommand.getName())).forEach(sqlCommand -> {
-                    String tableComment = jdbcTemplate.queryForObject("select comments from user_tab_comments where table_name = '" + sqlCommand.getName() + "'", String.class);
+                    String tableComment = "";
+                    try {
+                        tableComment = jdbcTemplate.queryForObject("select comments from user_tab_comments where table_name = '" + sqlCommand.getName() + "'", String.class);
+                    } catch (Exception e) {
+
+                    }
+                    final String tableCommentFinal = tableComment;
                     Sheet sheet = workbook.createSheet(sqlCommand.getName());
                     Map<String, String> tableRemarksMap = DbInfoUtil.getTableRemarksMap(driver, url, user, pwd, sqlCommand.getName());
                     try {
@@ -151,7 +157,7 @@ public class ExcelController {
                                 cell.setCellStyle(hlinkstyle);
                                 cell.setCellValue(sqlCommand.getName());
                                 row.createCell(1).setCellValue(rowNum);
-                                row.createCell(2).setCellValue(tableComment);
+                                row.createCell(2).setCellValue(tableCommentFinal);
                                 return null;
                             }
                         });
